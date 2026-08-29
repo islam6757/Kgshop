@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand-Man</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #fff; color: #333; }
+        .top-bar { background-color: #1a1a1a; color: #d4af37; text-align: center; padding: 20px 0; letter-spacing: 3px; text-transform: uppercase; }
+        .top-bar h1 { margin: 0; font-size: 1.8rem; font-weight: 400; }
+        
+        .search-container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+        .search-form { display: flex; gap: 10px; }
+        .search-input { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        .search-btn { background: #d4af37; color: #fff; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        .hero { display: flex; align-items: center; justify-content: space-between; padding: 40px 10%; background-color: #fcfcfc; border-bottom: 1px solid #eee; }
+        .hero-text { max-width: 50%; }
+        .hero-text h2 { font-size: 2.8rem; margin: 0 0 10px 0; font-weight: 700; text-transform: uppercase; line-height: 1.1; }
+        .hero-text p { font-size: 1.1rem; color: #666; margin-bottom: 25px; }
+        .hero-image { width: 350px; height: 350px; object-fit: cover; border-radius: 8px; }
+
+        .categories-section { padding: 40px 10%; text-align: center; }
+        .section-title { font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; font-weight: 600; }
+
+        /* Сетка категорий и товаров — 2 в ряд на мобиле */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        
+        .card { text-decoration: none; color: #333; display: flex; flex-direction: column; background: #fff; border: 1px solid #eee; border-radius: 6px; overflow: hidden; position: relative; }
+        .card-img { width: 100%; height: 280px; object-fit: cover; display: block; }
+        .card-body { padding: 12px; text-align: center; }
+        .card-title { font-size: 1rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
+        .card-price { font-size: 1.1rem; color: #d4af37; font-weight: bold; }
+        
+        .badge { position: absolute; top: 10px; right: 10px; padding: 4px 8px; font-size: 0.75rem; font-weight: bold; border-radius: 3px; color: #fff; text-transform: uppercase; }
+        .badge-instock { background: #28a745; }
+        .badge-outstock { background: #dc3545; }
+
+        @media (max-width: 768px) {
+            .hero { flex-direction: column; text-align: center; padding: 20px; }
+            .hero-text { max-width: 100%; margin-bottom: 20px; }
+            .hero-text h2 { font-size: 2rem; }
+            .hero-image { width: 100%; height: 250px; }
+            .categories-section { padding: 20px 10px; }
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .card-img { height: 180px; }
+            .card-title { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <h1>Brand-Man</h1>
+    </header>
+
+    <!-- Поисковик с подсказками -->
+    <div style="position: relative; max-width: 400px; margin: 20px auto;">
+        <form action="/" method="get" style="display: flex; gap: 10px;">
+            <input type="text" name="search" id="searchInput" value="{{ search_query }}" placeholder="Поиск товара..." autocomplete="off" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            <button type="submit" style="padding: 10px 15px; background: #000; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Найти</button>
+        </form>
+        
+        <!-- Выпадающий список для подсказок -->
+        <div id="suggestionsBox" style="position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ddd; border-top: none; border-radius: 0 0 4px 4px; z-index: 1000; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+    </div>
+
+    <!-- СКРИПТ АВТОДОПОЛНЕНИЯ -->
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsBox = document.getElementById('suggestionsBox');
+
+        searchInput.addEventListener('input', async function() {
+            const query = this.value.trim();
+            
+            if (query.length < 1) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/search-suggestions?q=${encodeURIComponent(query)}`);
+                const suggestions = await response.json();
+
+                if (suggestions.length > 0) {
+                    suggestionsBox.innerHTML = suggestions.map(item => `
+                        <div class="suggestion-item" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.9rem;">
+                            ${item}
+                        </div>
+                    `).join('');
+                    suggestionsBox.style.display = 'block';
+
+                    // Клик по подсказке заполняет поле и отправляет форму
+                    document.querySelectorAll('.suggestion-item').forEach(el => {
+                        el.addEventListener('click', function() {
+                            searchInput.value = this.textContent.trim();
+                            suggestionsBox.style.display = 'none';
+                            searchInput.form.submit();
+                        });
+                    });
+                } else {
+                    suggestionsBox.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке подсказок:', error);
+            }
+        });
+
+        // Закрывать подсказки при клике в другое место экрана
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+    </script>
+
+    {% if search_query %}
+    <!-- Результаты поиска -->
+    <section class="categories-section">
+        <div class="section-title">Результаты поиска: "{{ search_query }}"</div>
+        {% if products %}
+        <div class="grid">
+            {% for prod in products %}
+            <div class="card">
+                {% if prod[3] == 1 %}
+                    <span class="badge badge-instock">В наличии</span>
+                {% else %}
+                    <span class="badge badge-outstock">Нет в наличии</span>
+                {% endif %}
+                <img src="{{ prod[4] }}" alt="{{ prod[1] }}" class="card-img">
+                <div class="card-body">
+                    <div class="card-title">{{ prod[1] }}</div>
+                    <div style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">{{ prod[5] }}</div>
+                    <div class="card-price" style="margin-bottom: 10px;">{{ prod[2] }} сом</div>
+                    
+                    <!-- КНОПКА КУПИТЬ В WHATSAPP -->
+                    <a href="https://wa.me/996708485808?text=Здравствуйте!%20Хочу%20купить%20товар:%20{{ prod[1] }}%20по%20цене%20{{ prod[2] }}%20сом." 
+                       target="_blank" 
+                       style="display: block; background: #25D366; color: #fff; padding: 10px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 0.9rem; text-transform: uppercase;">
+                       Купить в WhatsApp
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <p>Ничего не найдено</p>
+        {% endif %}
+        <p style="margin-top: 20px;"><a href="/" style="color: #d4af37; text-decoration: none;">← Вернуться на главную</a></p>
+    </section>
+    {% else %}
+    <!-- Главная страница -->
+    <section class="hero">
+        <div class="hero-text">
+            <h2>Brand-Man<br>Мужская одежда</h2>
+            <p>Отборный ассортимент оверсайз одежды и обуви.<br>
+            Номер для заказа: <a href="tel:+996555555555" style="color: #d4af37;">+996 555 55 55 55</a></p>
+        </div>
+        <img src="{{ hero_image }}?v={{ range(1, 9999) | random }}" alt="Баннер" class="hero-image">
+    </section>
+
+    <section class="categories-section">
+        <div class="section-title">Каталог одежды</div>
+        
+        <div class="grid">
+            {% for cat in categories %}
+            <a href="/catalog/{{ cat[0] }}" class="card">
+                <img src="{{ cat[2] }}?v={{ range(1, 9999) | random }}" alt="{{ cat[1] }}" class="card-img">
+                <div class="card-body">
+                    <div class="card-title">{{ cat[1] }}</div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — Serious Clothes</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; color: #333; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; color: #d4af37; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px; }
+        .header h1 { margin: 0; font-size: 1.5rem; }
+        .header a { color: #fff; text-decoration: none; background: #333; padding: 8px 15px; border-radius: 4px; }
+
+        .section-box { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .section-box h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        .form-group { display: flex; flex-direction: column; gap: 10px; max-width: 500px; }
+        .form-group input, .form-group select { padding: 10px; font-size: 0.95rem; border: 1px solid #ccc; border-radius: 4px; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px; background: #fafafa; display: flex; flex-direction: column; align-items: center; }
+        .card img { width: 100%; height: 150px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; }
+
+        .btn { border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; width: 100%; }
+        .btn-gold { background-color: #d4af37; }
+        .btn-green { background-color: #28a745; }
+        .btn-red { background-color: #dc3545; margin-top: 5px; }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .card { padding: 6px; }
+            .card img { height: 110px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Управление сайтом</h1>
+        <a href="/" target="_blank">На сайт ↗</a>
+    </div>
+
+    <!-- 1. Добавить новый товар -->
+    <div class="section-box">
+        <h2>Добавить новый товар</h2>
+        <form action="/admin/add-product" method="post" enctype="multipart/form-data" class="form-group">
+            <input type="text" name="title" placeholder="Название модели (например, Nike Air Force 1)" required>
+            <input type="number" name="price" placeholder="Цена (сом)" required>
+            
+            <select name="category_id" required>
+                <option value="" disabled selected>Выберите раздел</option>
+                {% for cat in categories %}
+                    <option value="{{ cat[0] }}">{{ cat[1] }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="in_stock">
+                <option value="1">В наличии</option>
+                <option value="0">Нет в наличии</option>
+            </select>
+
+            <input type="file" name="file" accept="image/*" required>
+            <button type="submit" class="btn btn-green">Добавить товар</button>
+        </form>
+    </div>
+
+    <!-- 2. Список товаров и управление -->
+    <div class="section-box">
+        <h2>Все товары (Редактирование / Удаление)</h2>
+        <div class="grid">
+            {% for prod in products %}
+            <div class="card">
+                <img src="{{ prod[4] }}" alt="{{ prod[1] }}">
+                <div style="font-weight: bold; margin-bottom: 5px; text-align: center; font-size: 0.9rem;">{{ prod[1] }}</div>
+                <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">Раздел: {{ prod[5] }}</div>
+                
+                <form action="/admin/update-product" method="post" style="width: 100%; display: flex; flex-direction: column; gap: 5px;">
+                    <input type="hidden" name="product_id" value="{{ prod[0] }}">
+                    <input type="number" name="price" value="{{ prod[2] }}" style="padding: 5px; font-size: 0.85rem;" required>
+                    
+                    <select name="in_stock" style="padding: 5px; font-size: 0.85rem;">
+                        <option value="1" {% if prod[3] == 1 %}selected{% endif %}>В наличии</option>
+                        <option value="0" {% if prod[3] == 0 %}selected{% endif %}>Нет в наличии</option>
+                    </select>
+                    
+                    <button type="submit" class="btn btn-gold" style="padding: 5px; font-size: 0.8rem;">Сохранить</button>
+                </form>
+
+                <form action="/admin/delete-product" method="post" style="width: 100%;">
+                    <input type="hidden" name="product_id" value="{{ prod[0] }}">
+                    <button type="submit" class="btn btn-red" style="padding: 5px; font-size: 0.8rem;" onclick="return confirm('Удалить карточку?')">Удалить</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 3. Баннер -->
+    <div class="section-box">
+        <h2>Главное фото (Баннер)</h2>
+        <form action="/admin/update-hero" method="post" enctype="multipart/form-data" class="form-group">
+            <input type="file" name="file" accept="image/*" required>
+            <button type="submit" class="btn btn-gold">Обновить баннер</button>
+        </form>
+    </div>
+
+    <!-- 4. Обложки категорий -->
+    <div class="section-box">
+        <h2>Обложки категорий</h2>
+        <div class="grid">
+            {% for cat in categories %}
+            <div class="card">
+                <img src="{{ cat[2] }}?v={{ range(1, 9999) | random }}" alt="{{ cat[1] }}">
+                <div style="font-weight: bold; margin-bottom: 5px;">{{ cat[1] }}</div>
+                <form action="/admin/update-category" method="post" enctype="multipart/form-data" style="width: 100%;">
+                    <input type="hidden" name="category_id" value="{{ cat[0] }}">
+                    <input type="file" name="file" accept="image/*" required style="font-size: 0.7rem; width: 100%;">
+                    <button type="submit" class="btn btn-gold" style="padding: 4px; font-size: 0.75rem; margin-top: 5px;">Загрузить</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</body>
+</html>

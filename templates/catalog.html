@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ category_name }} — Serious Clothes</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #fff; color: #333; }
+        .top-bar { background-color: #1a1a1a; color: #d4af37; text-align: center; padding: 20px 0; }
+        .top-bar h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; }
+        .top-bar a { color: #fff; text-decoration: none; position: absolute; left: 15px; top: 20px; font-size: 0.9rem; }
+
+        .search-container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+        .search-form { display: flex; gap: 10px; }
+        .search-input { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        .search-btn { background: #d4af37; color: #fff; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        .container { padding: 20px 10%; text-align: center; }
+        .section-title { font-size: 1.5rem; text-transform: uppercase; margin-bottom: 25px; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        
+        .card { text-decoration: none; color: #333; display: flex; flex-direction: column; background: #fff; border: 1px solid #eee; border-radius: 6px; overflow: hidden; position: relative; text-align: center; }
+        .card-img { width: 100%; height: 280px; object-fit: cover; }
+        .card-body { padding: 12px; }
+        .card-title { font-size: 1rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
+        .card-price { font-size: 1.1rem; color: #d4af37; font-weight: bold; }
+        
+        .badge { position: absolute; top: 10px; right: 10px; padding: 4px 8px; font-size: 0.75rem; font-weight: bold; border-radius: 3px; color: #fff; text-transform: uppercase; }
+        .badge-instock { background: #28a745; }
+        .badge-outstock { background: #dc3545; }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px 10px; }
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .card-img { height: 180px; }
+            .card-title { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <a href="/">← Главная</a>
+        <h1>{{ category_name }}</h1>
+    </header>
+
+    <!-- Поисковик по категории -->
+    <div class="search-container">
+        <form action="/catalog/{{ category_id }}" method="get" class="search-form">
+            <input type="text" name="search" class="search-input" placeholder="Поиск в этом разделе..." value="{{ search_query }}">
+            <button type="submit" class="search-btn">Искать</button>
+        </form>
+    </div>
+
+    <div class="container">
+        {% if products %}
+        <div class="grid">
+            {% for prod in products %}
+            <div class="card">
+    {% if prod[3] == 1 %}
+        <span class="badge badge-instock">В наличии</span>
+    {% else %}
+        <span class="badge badge-outstock">Нет в наличии</span>
+    {% endif %}
+    <img src="{{ prod[4] }}" alt="{{ prod[1] }}" class="card-img">
+    <div class="card-body">
+        <div class="card-title">{{ prod[1] }}</div>
+        <div class="card-price" style="margin-bottom: 10px;">{{ prod[2] }} сом</div>
+        
+        <!-- КНОПКА КУПИТЬ В WHATSAPP -->
+        <a href="https://wa.me/996708485808?text=Здравствуйте!%20Хочу%20купить%20товар:%20{{ prod[1] }}%20по%20цене%20{{ prod[2] }}%20сом." 
+           target="_blank" 
+           style="display: block; background: #25D366; color: #fff; padding: 10px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 0.9rem; text-transform: uppercase;">
+           Купить в WhatsApp
+        </a>
+    </div>
+</div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <p>Товаров пока нет</p>
+        {% endif %}
+    </div>
+
+</body>
+</html>
