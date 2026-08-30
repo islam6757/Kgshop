@@ -43,9 +43,12 @@
     <div class="section-box">
         <h2>Добавить новый товар</h2>
         <form action="/admin/add-product" method="post" enctype="multipart/form-data" class="form-group">
-            <input type="text" name="title" placeholder="Название модели (например, Nike Air Force 1)" required>
+            <input type="text" name="title" placeholder="Название модели (например, Худи oversize)" required>
             <input type="number" name="price" placeholder="Цена (сом)" required>
             
+            <!-- НОВОЕ: Поле для размера -->
+            <input type="text" name="size" placeholder="Размер (например: L, 42, 43 или универсальный)">
+
             <select name="category_id" required>
                 <option value="" disabled selected>Выберите раздел</option>
                 {% for cat in categories %}

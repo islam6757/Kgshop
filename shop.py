@@ -57,6 +57,7 @@ def init_db():
             in_stock INTEGER NOT NULL DEFAULT 1,
             category_id INTEGER NOT NULL,
             image_url TEXT NOT NULL,
+            size TEXT DEFAULT '',
             FOREIGN KEY (category_id) REFERENCES categories (id)
         )
     """)
@@ -101,7 +102,7 @@ async def read_index(request: Request, search: str = ""):
     products = []
     if search.strip():
         cursor.execute("""
-            SELECT p.id, p.title, p.price, p.in_stock, p.image_url, c.title 
+            SELECT p.id, p.title, p.price, p.in_stock, p.image_url, c.title, p.size
             FROM products p 
             JOIN categories c ON p.category_id = c.id 
             WHERE p.title LIKE ?
@@ -145,13 +146,13 @@ async def category_catalog(request: Request, category_id: int, search: str = "")
     
     if search.strip():
         cursor.execute("""
-            SELECT id, title, price, in_stock, image_url 
+            SELECT id, title, price, in_stock, image_url, size
             FROM products 
             WHERE category_id = ? AND title LIKE ?
         """, (category_id, f"%{search.strip()}%"))
     else:
         cursor.execute("""
-            SELECT id, title, price, in_stock, image_url 
+            SELECT id, title, price, in_stock, image_url, size
             FROM products 
             WHERE category_id = ?
         """, (category_id,))
@@ -181,7 +182,7 @@ async def admin_page(request: Request, username: str = Depends(verify_admin)):
     hero_image = hero_result[0] if hero_result else "/static/images/hero.jpg"
     
     cursor.execute("""
-        SELECT p.id, p.title, p.price, p.in_stock, p.image_url, c.title, p.category_id
+        SELECT p.id, p.title, p.price, p.in_stock, p.image_url, c.title, p.category_id, p.size
         FROM products p
         JOIN categories c ON p.category_id = c.id
         ORDER BY p.id DESC
@@ -201,6 +202,7 @@ async def add_product(
     title: str = Form(...),
     price: int = Form(...),
     category_id: int = Form(...),
+    size: str = Form(""),  # <--- Добавили получение размера
     in_stock: int = Form(1),
     file: UploadFile = File(...),
     username: str = Depends(verify_admin)
@@ -213,9 +215,9 @@ async def add_product(
         conn = sqlite3.connect("shop.db")
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO products (title, price, in_stock, category_id, image_url)
-            VALUES (?, ?, ?, ?, ?)
-        """, (title, price, in_stock, category_id, f"/{file_path}"))
+            INSERT INTO products (title, price, in_stock, category_id, image_url, size)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (title, price, in_stock, category_id, f"/{file_path}", size))
         conn.commit()
         conn.close()
 
@@ -226,13 +228,14 @@ async def update_product(
     product_id: int = Form(...),
     price: int = Form(...),
     in_stock: int = Form(...),
+    size: str = Form(""),
     username: str = Depends(verify_admin)
 ):
     conn = sqlite3.connect("shop.db")
     cursor = conn.cursor()
     cursor.execute("""
-        UPDATE products SET price = ?, in_stock = ? WHERE id = ?
-    """, (price, in_stock, product_id))
+        UPDATE products SET price = ?, in_stock = ?, size = ? WHERE id = ?
+    """, (price, in_stock, size, product_id))
     conn.commit()
     conn.close()
     
