@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ category_name }} — Serious Clothes</title>
+    <title>{{ category_name }} — Brand-Man</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #fff; color: #333; }
-        .top-bar { background-color: #1a1a1a; color: #d4af37; text-align: center; padding: 20px 0; }
+        .top-bar { background-color: #1a1a1a; color: #d4af37; text-align: center; padding: 20px 0; position: relative; }
         .top-bar h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; }
         .top-bar a { color: #fff; text-decoration: none; position: absolute; left: 15px; top: 20px; font-size: 0.9rem; }
 
@@ -58,24 +58,31 @@
         <div class="grid">
             {% for prod in products %}
             <div class="card">
-    {% if prod[3] == 1 %}
-        <span class="badge badge-instock">В наличии</span>
-    {% else %}
-        <span class="badge badge-outstock">Нет в наличии</span>
-    {% endif %}
-    <img src="{{ prod[4] }}" alt="{{ prod[1] }}" class="card-img">
-    <div class="card-body">
-        <div class="card-title">{{ prod[1] }}</div>
-        <div class="card-price" style="margin-bottom: 10px;">{{ prod[2] }} сом</div>
-        
-        <!-- КНОПКА КУПИТЬ В WHATSAPP -->
-        <a href="https://wa.me/996555293141?text=Здравствуйте!%20Хочу%20купить%20товар:%20{{ prod[1] }}%20по%20цене%20{{ prod[2] }}%20сом." 
-           target="_blank" 
-           style="display: block; background: #25D366; color: #fff; padding: 10px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 0.9rem; text-transform: uppercase;">
-           Купить в WhatsApp
-        </a>
-    </div>
-</div>
+                {% if prod[3] == 1 %}
+                    <span class="badge badge-instock">В наличии</span>
+                {% else %}
+                    <span class="badge badge-outstock">Нет в наличии</span>
+                {% endif %}
+                <img src="{{ prod[4] }}" alt="{{ prod[1] }}" class="card-img">
+                <div class="card-body">
+                    <div class="card-title">{{ prod[1] }}</div>
+                    <div class="card-price" style="margin-bottom: 5px;">{{ prod[2] }} сом</div>
+                    
+                    <!-- Вывод размера для каталога категории (индекс 5) -->
+                    {% if prod[5] %}
+                    <div class="product-size" style="color: #666; font-size: 0.85rem; margin-bottom: 10px;">
+                        Размер: {{ prod[5] }}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- КНОПКА КУПИТЬ В WHATSAPP -->
+                    <a href="https://wa.me/996708485808?text=Здравствуйте!%20Хочу%20купить%20товар:%20{{ prod[1] }}%20по%20цене%20{{ prod[2] }}%20сом." 
+                       target="_blank" 
+                       style="display: block; background: #25D366; color: #fff; padding: 10px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 0.9rem; text-transform: uppercase;">
+                        Купить в WhatsApp
+                    </a>
+                </div>
+            </div>
             {% endfor %}
         </div>
         {% else %}
