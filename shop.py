@@ -2,7 +2,7 @@ import os
 import sqlite3
 import secrets
 from fastapi import FastAPI, Request, Form, File, UploadFile, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -10,7 +10,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 app = FastAPI()
 security = HTTPBasic()
 
-# Твои данные для входа в админку (можешь поменять на свои)
+# Твои данные для входа в админку
 ADMIN_USERNAME = "admin1"
 ADMIN_PASSWORD = "admin1"  # Измени на свой надежный пароль
 
@@ -71,8 +71,7 @@ def init_db():
             ("Зипки", "/static/images/zip_hoodie.jpg"),
             ("Жилетки", "/static/images/vest.jpg"),
             ("Рубашки", "/static/images/shirt.jpg"),
-            ("Полузамки", "/static/images/half_zip.jpg"),
-            ("Штаны", "/static/images/pants.jpg")
+            ("Полузамки", "/static/images/half_zip.jpg")
         ]
         cursor.executemany("INSERT INTO categories (title, image_url) VALUES (?, ?)", default_categories)
         
@@ -117,7 +116,6 @@ async def read_index(request: Request, search: str = ""):
         "products": products,
         "search_query": search
     })
-from fastapi.responses import JSONResponse
 
 @app.get("/api/search-suggestions")
 async def search_suggestions(q: str = ""):
@@ -135,6 +133,7 @@ async def search_suggestions(q: str = ""):
     conn.close()
     
     return JSONResponse(results)
+
 @app.get("/catalog/{category_id}", response_class=HTMLResponse)
 async def category_catalog(request: Request, category_id: int, search: str = ""):
     conn = sqlite3.connect("shop.db")
@@ -252,6 +251,30 @@ async def delete_product(
     
     return RedirectResponse(url="/admin", status_code=303)
 
+# НОВЫЙ РОУТ: Добавление новой категории
+@app.post("/admin/add-category")
+async def add_category(
+    name: str = Form(...),
+    file: UploadFile = File(...),
+    username: str = Depends(verify_admin)
+):
+    if file.filename:
+        file_path = f"static/images/{file.filename}"
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
+        
+        image_url = f"/{file_path}"
+        conn = sqlite3.connect("shop.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO categories (title, image_url)
+            VALUES (?, ?)
+        """, (name, image_url))
+        conn.commit()
+        conn.close()
+
+    return RedirectResponse(url="/admin", status_code=303)
+
 @app.post("/admin/update-category")
 async def update_category(
     category_id: int = Form(...), 
@@ -270,7 +293,7 @@ async def update_category(
         conn.commit()
         conn.close()
 
-    return RedirectResponse(url="/admin", status_change=303) if False else RedirectResponse(url="/admin", status_code=303)
+    return RedirectResponse(url="/admin", status_code=303)
 
 @app.post("/admin/update-hero")
 async def update_hero(

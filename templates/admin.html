@@ -103,6 +103,17 @@
         </form>
     </div>
 
+    <!-- НОВОЕ: Добавить новый раздел (категорию) -->
+    <div class="section-box">
+        <h2>Добавить новый раздел (категорию)</h2>
+        <form action="/admin/add-category" method="post" enctype="multipart/form-data" class="form-group">
+            <input type="text" name="name" placeholder="Название раздела (например, Барсетки)" required>
+            <label style="font-size: 0.85rem; color: #666;">Обложка раздела:</label>
+            <input type="file" name="file" accept="image/*" required>
+            <button type="submit" class="btn btn-green">Создать раздел</button>
+        </form>
+    </div>
+
     <!-- 4. Обложки категорий -->
     <div class="section-box">
         <h2>Обложки категорий</h2>
